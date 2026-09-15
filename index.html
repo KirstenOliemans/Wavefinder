@@ -1,0 +1,866 @@
+<title>WaveFinder</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+:root {
+  --green:#5BC97A; --yellow:#E8B84B; --red:#E05A4A;
+  --blue:#4DB8FF; --amber:#FFB547;
+  --text:#fff; --text2:rgba(255,255,255,.55); --text3:rgba(255,255,255,.25);
+  --border:rgba(255,255,255,.08);
+  --card:rgba(14,26,34,.84);
+  --surface:rgba(255,255,255,.07);
+  --surface2:rgba(255,255,255,.11);
+  --bg:#0E1B23;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:#111;display:flex;justify-content:center;align-items:center;min-height:100vh;font-family:'Inter',system-ui,sans-serif;color:var(--text)}
+
+/* ── phone frame ── */
+.phone{
+  width:390px;height:844px;
+  position:relative;overflow:hidden;
+  background:var(--bg);
+  border-radius:48px;
+  box-shadow:0 40px 120px rgba(0,0,0,.8),0 0 0 1px rgba(255,255,255,.07);
+}
+@media(max-width:430px){
+  body{align-items:flex-start;background:#000}
+  .phone{width:100vw;height:100dvh;border-radius:0;box-shadow:none}
+}
+
+/* ── screens ── */
+.screen{position:absolute;inset:0;bottom:72px;overflow-y:auto;overflow-x:hidden;scrollbar-width:none}
+.screen::-webkit-scrollbar{display:none}
+.screen.hidden{display:none}
+
+/* ── status bar ── */
+.status{display:flex;justify-content:space-between;align-items:center;padding:14px 28px 0;font-size:13px;font-weight:600;letter-spacing:.01em}
+.status-icons{display:flex;gap:5px;align-items:center}
+.bar{width:3px;background:var(--text);border-radius:1px}
+
+/* ── bottom nav ── */
+.tab-bar{
+  position:absolute;bottom:0;left:0;right:0;height:72px;
+  background:rgba(10,20,27,.92);
+  backdrop-filter:blur(24px);
+  border-top:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-around;
+  padding:0 8px 8px;
+}
+.tab{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 16px;cursor:pointer;border:none;background:none;color:var(--text3);font-family:inherit;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;transition:color .15s}
+.tab svg{width:22px;height:22px;fill:currentColor}
+.tab.active{color:var(--text)}
+.search-btn{width:42px;height:42px;border-radius:50%;background:var(--surface2);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text);transition:background .15s}
+.search-btn svg{width:20px;height:20px;fill:currentColor}
+
+/* ── pill chip buttons ── */
+.chip{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:7px 16px;border-radius:50px;
+  border:1px solid var(--border);background:var(--surface);
+  font-size:14px;font-weight:500;color:var(--text2);cursor:pointer;
+}
+
+/* ── HOME ── */
+.home-bg{
+  min-height:100%;
+  background:linear-gradient(180deg,#2a4a5e 0%,#3a647a 12%,#2d5570 25%,#1e3d52 40%,#182e3e 60%,#0f1f2b 80%,#0a161f 100%);
+  position:relative;
+}
+.home-bg::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 200% 60% at 50% 30%, rgba(77,184,255,.08) 0%, transparent 60%),
+             radial-gradient(ellipse 100% 30% at 30% 45%, rgba(30,80,110,.3) 0%, transparent 50%);
+  pointer-events:none;
+}
+.home-header{padding:0 24px 20px;position:relative;z-index:1}
+.home-greeting{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px}
+.hello-text{font-size:22px;font-weight:700;display:flex;align-items:center;gap:10px}
+.hello-icon{font-size:20px}
+
+.spot-card{
+  margin:0 20px 10px;
+  background:var(--card);
+  backdrop-filter:blur(20px);
+  border-radius:18px;border:1px solid var(--border);
+  padding:18px 20px;
+  cursor:pointer;position:relative;z-index:1;
+  transition:transform .1s;
+}
+.spot-card:active{transform:scale(.98)}
+.spot-card.featured{margin-bottom:16px}
+.card-row{display:flex;justify-content:space-between;align-items:flex-start}
+.card-time{font-size:13px;color:var(--text2);margin-bottom:4px;font-weight:500}
+.card-name{font-size:16px;font-weight:700;display:flex;align-items:center;gap:6px}
+.card-name svg{width:14px;height:14px;fill:var(--text3)}
+.card-rating{text-align:right}
+.rating-label{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:5px}
+.dots-row{display:flex;gap:4px;justify-content:flex-end}
+.dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.dot.g{background:var(--green)}
+.dot.y{background:var(--yellow)}
+.dot.r{background:var(--red)}
+.dot.dim{background:rgba(255,255,255,.15)}
+.card-desc{font-size:13px;color:var(--text2);margin-top:10px;line-height:1.5}
+.card-arrow{color:var(--text3);font-size:13px;font-weight:600;margin-top:2px}
+
+.fav-header{padding:24px 24px 12px;font-size:15px;font-weight:700;position:relative;z-index:1}
+.fav-scroll{display:flex;gap:10px;padding:0 20px 20px;overflow-x:auto;scrollbar-width:none;position:relative;z-index:1}
+.fav-scroll::-webkit-scrollbar{display:none}
+.fav-card{flex-shrink:0;width:160px;border-radius:16px;overflow:hidden;position:relative;cursor:pointer}
+.fav-img{height:115px;width:100%}
+.fav-info{padding:10px 12px;background:rgba(14,26,34,.9)}
+.fav-name{font-size:13px;font-weight:700;margin-bottom:4px}
+.fav-meta{font-size:11px;color:var(--text2)}
+.fav-heart{position:absolute;top:10px;right:10px;font-size:18px;color:white;text-shadow:0 1px 4px rgba(0,0,0,.5)}
+.fav-dots{display:flex;gap:3px;margin-bottom:3px}
+
+/* ── FORECAST ── */
+.forecast-bg{
+  min-height:100%;
+  background:linear-gradient(180deg,#1e3545 0%,#2a4a60 8%,#1e3d52 20%,#152e3e 40%,#0f1f2b 60%,#0a161f 100%);
+}
+.fc-header{padding:18px 24px 0;text-align:center;position:relative}
+.fc-title{font-size:22px;font-weight:800;letter-spacing:-.01em;margin-bottom:16px}
+.fc-controls{display:flex;justify-content:space-between;margin-bottom:20px}
+.live-btn{padding:7px 16px;border-radius:50px;border:1px solid var(--border);background:var(--surface);font-size:13px;font-weight:600;color:var(--text);cursor:pointer}
+
+.fc-card{
+  margin:0 14px;
+  background:var(--card);
+  backdrop-filter:blur(24px);
+  border-radius:20px;border:1px solid var(--border);
+  overflow:hidden;
+}
+.fc-tabs{display:flex;border-bottom:1px solid var(--border)}
+.fc-tab{flex:1;padding:14px;text-align:center;font-size:15px;font-weight:600;color:var(--text2);cursor:pointer;position:relative}
+.fc-tab.active{color:var(--text)}
+.fc-tab.active::after{content:'';position:absolute;bottom:0;left:20%;right:20%;height:2px;background:var(--text);border-radius:2px}
+
+/* pills row */
+.pills-scroll{display:flex;gap:7px;padding:14px 14px 10px;overflow-x:auto;scrollbar-width:none;align-items:flex-end}
+.pills-scroll::-webkit-scrollbar{display:none}
+.pill-col{display:flex;flex-direction:column;align-items:center;gap:5px;flex-shrink:0}
+.for-you-badge{font-size:8px;font-weight:700;letter-spacing:.05em;color:var(--blue);background:rgba(77,184,255,.12);border:1px solid rgba(77,184,255,.28);border-radius:4px;padding:2px 5px;white-space:nowrap}
+.badge-gap{height:17px}
+
+.pill{
+  width:48px;padding:9px 4px 8px;
+  background:rgba(255,255,255,.07);
+  border-radius:13px;border:1.5px solid transparent;
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  cursor:pointer;position:relative;overflow:visible;
+  transition:all .15s;
+}
+.pill.recommended{border-color:var(--green)}
+.pill.foryou{border-color:var(--blue);background:rgba(77,184,255,.1)}
+.pill.selected-col{background:rgba(255,255,255,.13)}
+.pill .p-time{font-size:11px;font-weight:700;line-height:1;color:var(--text)}
+.pill .p-time.dim{color:var(--text2)}
+.pill-dots{display:flex;gap:3px}
+.pdot{width:5px;height:5px;border-radius:50%}
+
+/* forecast table */
+.fc-table{width:100%;border-collapse:collapse}
+.fc-table tr{border-top:1px solid var(--border)}
+.fc-row-label{padding:12px 14px;font-size:12px;font-weight:700;color:var(--text2);white-space:nowrap;min-width:96px;vertical-align:middle}
+.fc-cell{padding:10px 6px;text-align:center;font-size:13px;font-weight:600;vertical-align:middle;min-width:52px;transition:background .15s}
+.fc-cell.active-col{background:rgba(255,255,255,.05)}
+.fc-cell .dir-arrow{font-size:16px;display:block;margin-bottom:2px}
+.fc-cell .dir-label{font-size:10px;color:var(--text2);font-weight:600}
+.fc-cell .hl{color:var(--green)}
+
+.model-row{padding:14px 20px;display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--text2)}
+.model-chip{padding:6px 14px;border-radius:50px;border:1px solid var(--border);background:var(--surface);font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:6px}
+
+.map-preview{margin:0 14px 14px;border-radius:16px;overflow:hidden;height:130px;position:relative;cursor:pointer}
+.map-preview-img{width:100%;height:100%;background:linear-gradient(135deg,#1a3a50 0%,#2a6a8a 40%,#1e5070 60%,#152840 100%);display:flex;align-items:center;justify-content:center;position:relative}
+.map-preview-img::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='130'%3E%3Cpath d='M0,80 Q80,50 160,70 Q240,90 320,60 Q360,45 400,55' fill='none' stroke='rgba(77,184,255,0.15)' stroke-width='2'/%3E%3Cpath d='M0,100 Q100,70 200,85 Q300,100 400,75' fill='none' stroke='rgba(91,201,122,0.1)' stroke-width='1.5'/%3E%3C/svg%3E") center/cover}
+.map-label{font-size:15px;font-weight:700;position:relative;z-index:1;background:rgba(14,26,34,.7);backdrop-filter:blur(8px);padding:8px 20px;border-radius:50px;border:1px solid var(--border)}
+
+.surf-report{margin:0 14px 20px;background:var(--card);backdrop-filter:blur(20px);border-radius:18px;border:1px solid var(--border);padding:18px 20px}
+.report-title{font-size:15px;font-weight:700;margin-bottom:3px}
+.report-date{font-size:12px;color:var(--text2);font-style:italic;margin-bottom:12px}
+.report-text{font-size:13px;color:var(--text2);line-height:1.7}
+
+/* 12-day view */
+.day-pills-scroll{display:flex;gap:7px;padding:14px 14px 14px;overflow-x:auto;scrollbar-width:none}
+.day-pills-scroll::-webkit-scrollbar{display:none}
+.day-pill{
+  flex-shrink:0;width:48px;padding:10px 4px 8px;
+  background:rgba(255,255,255,.07);
+  border-radius:13px;border:1.5px solid transparent;
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+  cursor:pointer;position:relative;
+}
+.day-pill.recommended{border-color:var(--green)}
+.day-pill.foryou{background:var(--blue);border-color:transparent}
+.day-pill .d-name{font-size:10px;font-weight:600;color:var(--text2);letter-spacing:.04em}
+.day-pill.foryou .d-name{color:rgba(255,255,255,.7)}
+.day-pill .d-num{font-size:18px;font-weight:800;line-height:1.1}
+.day-pill .d-heart{font-size:10px;margin-top:2px}
+.day-bar{width:26px;height:3px;border-radius:2px;margin-top:5px}
+
+/* ── MAP ── */
+.map-screen{position:absolute;inset:0;bottom:72px;background:#0d1520;overflow:hidden}
+.map-svg{width:100%;height:100%;display:block}
+.map-info-card{
+  position:absolute;top:70px;left:14px;right:14px;
+  background:rgba(10,20,28,.88);backdrop-filter:blur(20px);
+  border-radius:16px;border:1px solid var(--border);
+  padding:14px 18px;
+}
+.mic-spot{font-size:14px;font-weight:700;margin-bottom:8px}
+.mic-rows{display:flex;flex-direction:column;gap:4px}
+.mic-row{display:flex;gap:14px;font-size:12px}
+.mic-label{color:var(--text2);width:44px;font-weight:500}
+.mic-val{font-weight:600}
+.mic-val.hl{color:var(--blue)}
+.crosshair{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:32px;height:32px;opacity:.5;pointer-events:none}
+.crosshair::before,.crosshair::after{content:'';position:absolute;background:white}
+.crosshair::before{width:1px;height:100%;left:50%;top:0}
+.crosshair::after{width:100%;height:1px;top:50%;left:0}
+.layer-btn{position:absolute;bottom:110px;right:16px;width:40px;height:40px;border-radius:10px;background:rgba(10,20,28,.88);backdrop-filter:blur(12px);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px}
+.time-scrubber{position:absolute;bottom:72px;left:0;right:0;padding:10px 20px 12px;background:rgba(10,20,28,.9);backdrop-filter:blur(16px);border-top:1px solid var(--border)}
+.scrub-time{text-align:center;font-size:13px;font-weight:700;margin-bottom:6px}
+.scrub-days{display:flex;justify-content:space-between;font-size:10px;color:var(--text3);font-weight:600}
+.scrub-bar{height:2px;background:var(--surface);border-radius:1px;margin-bottom:4px;position:relative}
+.scrub-pos{position:absolute;left:15%;top:-3px;width:2px;height:8px;background:white;border-radius:1px}
+.scrub-dot{position:absolute;left:14%;top:50%;transform:translate(-50%,-50%);width:6px;height:6px;border-radius:50%;background:white}
+
+/* spot markers */
+.spot-marker{cursor:pointer}
+.spot-glow{filter:drop-shadow(0 0 6px currentColor)}
+
+/* ── GUIDE ── */
+.guide-screen{min-height:100%}
+.guide-hero{height:240px;position:relative;overflow:hidden;background:linear-gradient(180deg,#b8c5cc 0%,#94b0be 20%,#7aa0b0 35%,#6a95a8 45%,#c8b89a 62%,#d4c0a0 75%,#cdb898 100%)}
+.guide-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 40% at 50% 45%, rgba(106,149,168,.4) 0%,transparent 70%)}
+.guide-hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:80px;background:linear-gradient(transparent,var(--bg))}
+.guide-dots{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);display:flex;gap:5px}
+.gdot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.4)}
+.gdot.active{background:white;width:16px;border-radius:3px}
+
+.guide-content{background:var(--bg);padding:0 20px 24px}
+.guide-title-row{display:flex;justify-content:space-between;align-items:center;padding:18px 0 14px}
+.guide-title{font-size:24px;font-weight:800;letter-spacing:-.01em}
+.guide-tags{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.tag{display:flex;flex-direction:column;align-items:center;gap:5px;background:var(--surface2);border-radius:14px;padding:12px 14px;flex:1;min-width:70px;cursor:pointer}
+.tag-icon{font-size:18px}
+.tag-label{font-size:10px;font-weight:700;color:var(--text2);text-align:center;line-height:1.3}
+
+.guide-body{display:flex;gap:14px;margin-bottom:20px;align-items:flex-start}
+.guide-text{flex:1;font-size:13px;color:var(--text2);line-height:1.7}
+.guide-text a{color:var(--text);font-weight:600;text-decoration:underline;text-underline-offset:2px}
+.spot-diagram{width:140px;flex-shrink:0;border-radius:14px;overflow:hidden;background:var(--surface);padding:12px}
+
+.guide-cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
+.guide-card{background:var(--surface);border-radius:16px;padding:16px}
+.guide-card-title{font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px;margin-bottom:12px}
+.guide-card-title span{font-size:16px}
+.ideal-rows{display:flex;flex-direction:column;gap:6px}
+.ideal-row{display:flex;font-size:12px}
+.ideal-label{color:var(--text2);width:48px;font-weight:500}
+.ideal-sep{width:1px;background:var(--border);margin:0 8px}
+.ideal-val{font-weight:600;font-size:12px}
+.loc-text{font-size:12px;color:var(--text2);line-height:1.6}
+</style>
+
+<!-- ╔══════════════════════════════════════╗ -->
+<!-- ║            PHONE FRAME              ║ -->
+<!-- ╚══════════════════════════════════════╝ -->
+<div class="phone">
+
+  <!-- ═══════════ HOME SCREEN ═══════════ -->
+  <div class="screen" id="s-home">
+    <div class="home-bg">
+      <div class="status">
+        <span>08:38</span>
+        <div class="status-icons">
+          <div style="display:flex;gap:2px;align-items:flex-end">
+            <div class="bar" style="height:5px"></div>
+            <div class="bar" style="height:8px"></div>
+            <div class="bar" style="height:11px"></div>
+            <div class="bar" style="height:14px"></div>
+          </div>
+          <svg width="16" height="12" viewBox="0 0 16 12" fill="white"><path d="M8 2C10.8 2 13.3 3.1 15.1 4.9L16 4l-1-1C13 1.1 10.6 0 8 0S3 1.1 1 3L0 4l.9.9C2.7 3.1 5.2 2 8 2zm0 3c1.7 0 3.2.7 4.3 1.8L13.5 8l-1 1c-.8-.8-1.8-1.3-2.9-1.4L8 9.2 6.4 7.6C7.5 7.4 8.5 7 9.3 6.2L8 5zm0 4l2 2-2 2-2-2 2-2z" opacity=".9"/></svg>
+          <svg width="26" height="13" viewBox="0 0 26 13" fill="white"><rect x=".5" y=".5" width="22" height="12" rx="3.5" stroke="white" stroke-opacity=".35" fill="none"/><rect x="2" y="2" width="17" height="9" rx="2" fill="white"/><path d="M24 4.5v4a2 2 0 000-4z" fill="white" opacity=".4"/></svg>
+        </div>
+      </div>
+
+      <div class="home-header">
+        <div class="home-greeting">
+          <div class="hello-text"><span class="hello-icon">🌊</span> Hello Kirsten</div>
+          <button class="chip" onclick="void(0)">Today <span style="color:var(--text3)">▾</span></button>
+        </div>
+
+        <!-- Best spot -->
+        <div class="spot-card featured" onclick="goto('forecast')">
+          <div class="card-row">
+            <div>
+              <div class="card-time">Best today 1 pm – 4 pm</div>
+              <div class="card-name">
+                <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                Scheveningen <span style="color:var(--text3);font-weight:500;font-size:13px">0 km</span>
+              </div>
+            </div>
+            <div class="card-rating">
+              <div class="rating-label">Epic</div>
+              <div class="dots-row"><div class="dot g"></div><div class="dot g"></div><div class="dot g"></div><div class="dot g"></div></div>
+            </div>
+          </div>
+          <div class="card-desc">Clean waist to chest high waves<br>Light offshore winds · Rising tide</div>
+        </div>
+
+        <!-- Spot 2 -->
+        <div class="spot-card" onclick="goto('forecast')">
+          <div class="card-row">
+            <div>
+              <div class="card-time">Today 1 pm – 3 pm</div>
+              <div class="card-name">
+                <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                de Pier <span style="color:var(--text3);font-weight:500;font-size:13px">1 km</span>
+              </div>
+            </div>
+            <div class="card-rating">
+              <div class="rating-label">Good</div>
+              <div class="dots-row"><div class="dot g"></div><div class="dot g"></div><div class="dot g"></div><div class="dot dim"></div></div>
+            </div>
+          </div>
+          <div class="card-arrow">→</div>
+        </div>
+
+        <!-- Spot 3 -->
+        <div class="spot-card" onclick="goto('forecast')">
+          <div class="card-row">
+            <div>
+              <div class="card-time">Today 12 pm – 2 pm</div>
+              <div class="card-name">
+                <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                Wijk aan Zee <span style="color:var(--text3);font-weight:500;font-size:13px">15 km</span>
+              </div>
+            </div>
+            <div class="card-rating">
+              <div class="rating-label">Fair</div>
+              <div class="dots-row"><div class="dot y"></div><div class="dot y"></div><div class="dot dim"></div><div class="dot dim"></div></div>
+            </div>
+          </div>
+          <div class="card-arrow">→</div>
+        </div>
+      </div>
+
+      <div class="fav-header">Favourites</div>
+      <div class="fav-scroll">
+        <div class="fav-card" onclick="goto('forecast')">
+          <div class="fav-img" style="background:linear-gradient(145deg,#1a4a2e 0%,#2d7a50 45%,#4daa78 70%,#3d8a60 100%)"></div>
+          <span class="fav-heart">♥</span>
+          <div class="fav-info">
+            <div class="fav-dots"><div class="dot g"></div><div class="dot g"></div><div class="dot g"></div><div class="dot g"></div></div>
+            <div class="fav-name">Manu Bay, NZ</div>
+            <div class="fav-meta">Tomorrow 7 am–9 am</div>
+          </div>
+        </div>
+        <div class="fav-card" onclick="goto('forecast')">
+          <div class="fav-img" style="background:linear-gradient(145deg,#1a2a5a 0%,#2d4a8a 45%,#4d6aaa 70%,#3d5a90 100%)"></div>
+          <span class="fav-heart">♥</span>
+          <div class="fav-info">
+            <div class="fav-dots"><div class="dot g"></div><div class="dot g"></div><div class="dot g"></div><div class="dot dim"></div></div>
+            <div class="fav-name">Ericeria, PT</div>
+            <div class="fav-meta">Tomorrow 10 am–1 pm</div>
+          </div>
+        </div>
+        <div class="fav-card" onclick="goto('forecast')">
+          <div class="fav-img" style="background:linear-gradient(145deg,#1a3a5a 0%,#2d5a8a 45%,#4d8aaa 70%,#3d6a90 100%)"></div>
+          <span class="fav-heart">♥</span>
+          <div class="fav-info">
+            <div class="fav-dots"><div class="dot g"></div><div class="dot g"></div><div class="dot dim"></div><div class="dot dim"></div></div>
+            <div class="fav-name">Main Point, ES</div>
+            <div class="fav-meta">Tomorrow 8 am–11 am</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div><!-- /home -->
+
+  <!-- ═══════════ FORECAST SCREEN ═══════════ -->
+  <div class="screen hidden" id="s-forecast">
+    <div class="forecast-bg">
+      <div class="status" style="padding-bottom:10px">
+        <span>12:30</span>
+        <div class="status-icons">
+          <div style="display:flex;gap:2px;align-items:flex-end">
+            <div class="bar" style="height:5px"></div><div class="bar" style="height:8px"></div><div class="bar" style="height:11px"></div><div class="bar" style="height:14px"></div>
+          </div>
+          <svg width="16" height="12" viewBox="0 0 16 12" fill="white"><path d="M8 2C10.8 2 13.3 3.1 15.1 4.9L16 4l-1-1C13 1.1 10.6 0 8 0S3 1.1 1 3L0 4l.9.9C2.7 3.1 5.2 2 8 2zm0 3c1.7 0 3.2.7 4.3 1.8L13.5 8l-1 1c-.8-.8-1.8-1.3-2.9-1.4L8 9.2 6.4 7.6C7.5 7.4 8.5 7 9.3 6.2L8 5zm0 4l2 2-2 2-2-2 2-2z" opacity=".9"/></svg>
+          <svg width="26" height="13" viewBox="0 0 26 13" fill="white"><rect x=".5" y=".5" width="22" height="12" rx="3.5" stroke="white" stroke-opacity=".35" fill="none"/><rect x="2" y="2" width="17" height="9" rx="2" fill="white"/><path d="M24 4.5v4a2 2 0 000-4z" fill="white" opacity=".4"/></svg>
+        </div>
+      </div>
+      <div class="fc-header">
+        <div class="fc-title">Scheveningen</div>
+        <div class="fc-controls">
+          <button class="chip">Today <span style="color:var(--text3)">▾</span></button>
+          <button class="live-btn">Live Cam</button>
+        </div>
+      </div>
+
+      <div class="fc-card">
+        <div class="fc-tabs">
+          <div class="fc-tab active" id="tab-hourly" onclick="switchTab('hourly')">Hourly</div>
+          <div class="fc-tab" id="tab-12day" onclick="switchTab('12day')">12-day</div>
+        </div>
+
+        <!-- HOURLY VIEW -->
+        <div id="view-hourly">
+          <div class="pills-scroll" id="pills-row">
+            <!-- 6AM default/poor -->
+            <div class="pill-col">
+              <div class="badge-gap"></div>
+              <div class="pill" data-col="0" onclick="selectPill(0)">
+                <span class="p-time dim">6AM</span>
+                <div class="pill-dots"><div class="pdot" style="background:var(--red)"></div><div class="pdot" style="background:rgba(255,255,255,.15)"></div><div class="pdot" style="background:rgba(255,255,255,.15)"></div></div>
+              </div>
+            </div>
+            <!-- 9AM default/poor -->
+            <div class="pill-col">
+              <div class="badge-gap"></div>
+              <div class="pill" data-col="1" onclick="selectPill(1)">
+                <span class="p-time dim">9AM</span>
+                <div class="pill-dots"><div class="pdot" style="background:var(--red)"></div><div class="pdot" style="background:rgba(255,255,255,.15)"></div><div class="pdot" style="background:rgba(255,255,255,.15)"></div></div>
+              </div>
+            </div>
+            <!-- 12PM fair -->
+            <div class="pill-col">
+              <div class="badge-gap"></div>
+              <div class="pill" data-col="2" onclick="selectPill(2)">
+                <span class="p-time">12PM</span>
+                <div class="pill-dots"><div class="pdot" style="background:var(--yellow)"></div><div class="pdot" style="background:var(--yellow)"></div><div class="pdot" style="background:rgba(255,255,255,.15)"></div></div>
+              </div>
+            </div>
+            <!-- 3PM recommended -->
+            <div class="pill-col">
+              <div class="badge-gap"></div>
+              <div class="pill recommended" data-col="3" onclick="selectPill(3)">
+                <span class="p-time">3PM</span>
+                <div class="pill-dots"><div class="pdot" style="background:var(--green)"></div><div class="pdot" style="background:var(--green)"></div><div class="pdot" style="background:var(--green)"></div></div>
+              </div>
+            </div>
+            <!-- 6PM FOR YOU -->
+            <div class="pill-col">
+              <span class="for-you-badge">FOR YOU</span>
+              <div class="pill foryou" data-col="4" onclick="selectPill(4)">
+                <span class="p-time">6PM</span>
+                <div class="pill-dots"><div class="pdot" style="background:var(--blue)"></div><div class="pdot" style="background:var(--blue)"></div><div class="pdot" style="background:var(--blue)"></div></div>
+              </div>
+            </div>
+            <!-- 9PM fair -->
+            <div class="pill-col">
+              <div class="badge-gap"></div>
+              <div class="pill" data-col="5" onclick="selectPill(5)">
+                <span class="p-time">9PM</span>
+                <div class="pill-dots"><div class="pdot" style="background:var(--yellow)"></div><div class="pdot" style="background:var(--yellow)"></div><div class="pdot" style="background:rgba(255,255,255,.15)"></div></div>
+              </div>
+            </div>
+            <!-- 12AM poor -->
+            <div class="pill-col">
+              <div class="badge-gap"></div>
+              <div class="pill" data-col="6" onclick="selectPill(6)">
+                <span class="p-time dim">12AM</span>
+                <div class="pill-dots"><div class="pdot" style="background:var(--red)"></div><div class="pdot" style="background:rgba(255,255,255,.15)"></div><div class="pdot" style="background:rgba(255,255,255,.15)"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Table -->
+          <table class="fc-table">
+            <tr>
+              <td class="fc-row-label">Swell</td>
+              <td class="fc-cell" data-col="0">2–3 ft</td>
+              <td class="fc-cell" data-col="1">2–3 ft</td>
+              <td class="fc-cell" data-col="2">3–4 ft</td>
+              <td class="fc-cell" data-col="3">3–4 ft</td>
+              <td class="fc-cell" data-col="4">4–5 ft</td>
+              <td class="fc-cell" data-col="5">3–4 ft</td>
+              <td class="fc-cell" data-col="6">2–3 ft</td>
+            </tr>
+            <tr>
+              <td class="fc-row-label">Swell Dir</td>
+              <td class="fc-cell" data-col="0"><span class="dir-arrow">↗</span><span class="dir-label">SW</span></td>
+              <td class="fc-cell" data-col="1"><span class="dir-arrow">↗</span><span class="dir-label">SW</span></td>
+              <td class="fc-cell" data-col="2"><span class="dir-arrow">↖</span><span class="dir-label">NW</span></td>
+              <td class="fc-cell" data-col="3"><span class="dir-arrow">↖</span><span class="dir-label">NW</span></td>
+              <td class="fc-cell" data-col="4"><span class="dir-arrow">↖</span><span class="dir-label">NW</span></td>
+              <td class="fc-cell" data-col="5"><span class="dir-arrow">↖</span><span class="dir-label">NW</span></td>
+              <td class="fc-cell" data-col="6"><span class="dir-arrow">↗</span><span class="dir-label">SW</span></td>
+            </tr>
+            <tr>
+              <td class="fc-row-label">Period</td>
+              <td class="fc-cell" data-col="0">9 s</td>
+              <td class="fc-cell" data-col="1">10 s</td>
+              <td class="fc-cell" data-col="2">12 s</td>
+              <td class="fc-cell" data-col="3">13 s</td>
+              <td class="fc-cell" data-col="4">14 s</td>
+              <td class="fc-cell" data-col="5">13 s</td>
+              <td class="fc-cell" data-col="6">10 s</td>
+            </tr>
+            <tr>
+              <td class="fc-row-label">Wind</td>
+              <td class="fc-cell" data-col="0">22 kt</td>
+              <td class="fc-cell" data-col="1">18 kt</td>
+              <td class="fc-cell" data-col="2">14 kt</td>
+              <td class="fc-cell" data-col="3">10 kt</td>
+              <td class="fc-cell" data-col="4">6 kt</td>
+              <td class="fc-cell" data-col="5">8 kt</td>
+              <td class="fc-cell" data-col="6">16 kt</td>
+            </tr>
+            <tr>
+              <td class="fc-row-label">Wind Dir</td>
+              <td class="fc-cell" data-col="0"><span class="dir-arrow">↗</span><span class="dir-label">SW</span></td>
+              <td class="fc-cell" data-col="1"><span class="dir-arrow">↗</span><span class="dir-label">SW</span></td>
+              <td class="fc-cell" data-col="2"><span class="dir-arrow">↗</span><span class="dir-label">SW</span></td>
+              <td class="fc-cell" data-col="3"><span class="dir-arrow">↙</span><span class="dir-label">SE</span></td>
+              <td class="fc-cell" data-col="4"><span class="dir-arrow">↙</span><span class="dir-label">SE</span></td>
+              <td class="fc-cell" data-col="5"><span class="dir-arrow">↓</span><span class="dir-label">S</span></td>
+              <td class="fc-cell" data-col="6"><span class="dir-arrow">↗</span><span class="dir-label">SW</span></td>
+            </tr>
+          </table>
+        </div>
+
+        <!-- 12-DAY VIEW -->
+        <div id="view-12day" style="display:none">
+          <div class="day-pills-scroll">
+            <div class="day-pill"><span class="d-name">MA</span><span class="d-num">8</span><div class="day-bar" style="background:rgba(255,255,255,.15)"></div></div>
+            <div class="day-pill"><span class="d-name">DI</span><span class="d-num">9</span><div class="day-bar" style="background:var(--yellow)"></div></div>
+            <div class="day-pill recommended"><span class="d-name">WO</span><span class="d-num">10</span><div class="day-bar" style="background:var(--green)"></div></div>
+            <div class="day-pill foryou"><span class="d-name">DO</span><span class="d-num">11</span><span class="d-heart">♥</span></div>
+            <div class="day-pill recommended"><span class="d-name">VR</span><span class="d-num">12</span><div class="day-bar" style="background:var(--green)"></div></div>
+            <div class="day-pill"><span class="d-name">ZA</span><span class="d-num">13</span><div class="day-bar" style="background:var(--yellow)"></div></div>
+            <div class="day-pill"><span class="d-name">ZO</span><span class="d-num">14</span><div class="day-bar" style="background:rgba(255,255,255,.15)"></div></div>
+          </div>
+          <div style="padding:0 14px 16px">
+            <table class="fc-table" style="border-top:1px solid var(--border)">
+              <tr><td class="fc-row-label">Avg Swell</td><td class="fc-cell">1–2 ft</td><td class="fc-cell">2–3 ft</td><td class="fc-cell">3–4 ft</td><td class="fc-cell">4–5 ft</td><td class="fc-cell">3–5 ft</td><td class="fc-cell">2–3 ft</td><td class="fc-cell">1–2 ft</td></tr>
+              <tr><td class="fc-row-label">Best time</td><td class="fc-cell" style="font-size:11px">—</td><td class="fc-cell" style="font-size:11px">12PM</td><td class="fc-cell" style="font-size:11px">3PM</td><td class="fc-cell" style="font-size:11px">6PM</td><td class="fc-cell" style="font-size:11px">3PM</td><td class="fc-cell" style="font-size:11px">11AM</td><td class="fc-cell" style="font-size:11px">—</td></tr>
+            </table>
+          </div>
+        </div>
+      </div><!-- /fc-card -->
+
+      <div class="model-row" style="padding:12px 20px">
+        <span>Based on weather model:</span>
+        <div class="model-chip">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--text2)"><path d="M11.5 2C6.81 2 3 5.81 3 10.5S6.81 19 11.5 19h.5v3c4.86-2.34 8-7 8-11.5C20 5.81 16.19 2 11.5 2zm1 14.5h-2v-2h2v2zm0-4h-2c0-3.25 3-3 3-5 0-1.1-.9-2-2-2s-2 .9-2 2h-2c0-2.21 1.79-4 4-4s4 1.79 4 4c0 2.5-3 2.75-3 5z"/></svg>
+          ECMWF <span style="color:var(--text3)">▾</span>
+        </div>
+      </div>
+
+      <div class="map-preview" onclick="goto('map')">
+        <div class="map-preview-img">
+          <svg style="position:absolute;inset:0;width:100%;height:100%;opacity:.3" viewBox="0 0 390 130" preserveAspectRatio="xMidYMid slice">
+            <circle cx="110" cy="65" r="4" fill="#5BC97A"/>
+            <circle cx="145" cy="45" r="3" fill="#E8B84B"/>
+            <circle cx="80" cy="85" r="3" fill="#E05A4A"/>
+            <text x="116" y="68" fill="white" font-size="9" opacity=".6">Scheveningen</text>
+          </svg>
+          <div class="map-label">View Map</div>
+        </div>
+      </div>
+
+      <div class="surf-report">
+        <div class="report-title">Local Surf Report</div>
+        <div class="report-date">Wed 12/4 · 7 AM</div>
+        <div class="report-text">Small but clean this morning with light E–SE offshore winds grooming the lines. Waist- to occasional chest-high sets coming in on a weak WNW pulse, a bit inconsistent but fun if you're patient.<br><br>The banks around the right-hand side of the pier are shaping up nicely, offering short lefts and rights with a workable face before they taper off.</div>
+      </div>
+    </div><!-- /forecast-bg -->
+  </div><!-- /forecast screen -->
+
+  <!-- ═══════════ MAP SCREEN ═══════════ -->
+  <div class="screen hidden" id="s-map" style="bottom:72px;overflow:hidden">
+    <div class="map-screen" id="map-screen">
+      <!-- SVG Netherlands map -->
+      <svg class="map-svg" id="map-svg" viewBox="0 0 390 620" preserveAspectRatio="xMidYMid slice">
+        <defs>
+          <radialGradient id="seaGrad" cx="50%" cy="50%" r="70%">
+            <stop offset="0%" stop-color="#0d1b2a"/>
+            <stop offset="100%" stop-color="#0a1420"/>
+          </radialGradient>
+        </defs>
+        <!-- Sea -->
+        <rect width="390" height="620" fill="url(#seaGrad)"/>
+        <!-- Grid lines (subtle) -->
+        <g stroke="rgba(255,255,255,.03)" stroke-width="1">
+          <line x1="0" y1="150" x2="390" y2="150"/>
+          <line x1="0" y1="300" x2="390" y2="300"/>
+          <line x1="0" y1="450" x2="390" y2="450"/>
+          <line x1="100" y1="0" x2="100" y2="620"/>
+          <line x1="200" y1="0" x2="200" y2="620"/>
+          <line x1="300" y1="0" x2="300" y2="620"/>
+        </g>
+        <!-- Netherlands land mass (simplified) -->
+        <path id="nl-land" d="
+          M 152,141 L 143,160 L 148,175 L 138,248 L 133,267 L 110,349 L 97,382 L 49,468 L 17,487
+          L 50,510 L 90,525 L 130,540 L 165,545 L 200,555 L 230,548 L 255,540
+          L 280,530 L 310,510 L 340,480 L 360,440 L 355,400 L 350,350 L 345,290 L 340,220 L 330,160 L 309,89
+          L 270,75 L 230,70 L 195,80 L 175,95 L 160,120 L 152,141 Z
+        " fill="#1c2e3a" stroke="#2a4050" stroke-width="1"/>
+        <!-- Frisian Islands (simplified blobs) -->
+        <ellipse cx="185" cy="120" rx="22" ry="8" fill="#1c2e3a" stroke="#2a4050" stroke-width="1" transform="rotate(-10 185 120)"/>
+        <ellipse cx="222" cy="100" rx="18" ry="7" fill="#1c2e3a" stroke="#2a4050" stroke-width="1" transform="rotate(-8 222 100)"/>
+        <ellipse cx="258" cy="88" rx="16" ry="6" fill="#1c2e3a" stroke="#2a4050" stroke-width="1" transform="rotate(-5 258 88)"/>
+
+        <!-- City labels -->
+        <text x="160" y="306" fill="rgba(255,255,255,.3)" font-size="9" font-family="Inter,sans-serif" font-weight="500">Amsterdam</text>
+        <text x="110" y="370" fill="rgba(255,255,255,.3)" font-size="9" font-family="Inter,sans-serif" font-weight="500">The Hague</text>
+        <text x="130" y="410" fill="rgba(255,255,255,.25)" font-size="9" font-family="Inter,sans-serif" font-weight="500">Rotterdam</text>
+        <text x="295" y="105" fill="rgba(255,255,255,.25)" font-size="9" font-family="Inter,sans-serif" font-weight="500">Groningen</text>
+        <text x="50" y="490" fill="rgba(255,255,255,.25)" font-size="9" font-family="Inter,sans-serif" font-weight="500">Vlissingen</text>
+
+        <!-- Surf spots -->
+        <!-- Scheveningen (selected/green) -->
+        <g class="spot-marker" onclick="selectSpot('scheveningen')" id="spot-scheveningen">
+          <circle cx="105" cy="353" r="14" fill="rgba(91,201,122,.15)" stroke="none"/>
+          <circle cx="105" cy="353" r="8" fill="#5BC97A" class="spot-glow" style="color:#5BC97A"/>
+          <text x="105" y="357" fill="white" font-size="9" font-family="Inter,sans-serif" font-weight="800" text-anchor="middle">4</text>
+        </g>
+        <!-- de Pier -->
+        <g class="spot-marker" onclick="selectSpot('pier')">
+          <circle cx="102" cy="362" r="6" fill="#5BC97A" opacity=".7"/>
+        </g>
+        <!-- Wijk aan Zee -->
+        <g class="spot-marker" onclick="selectSpot('wijk')">
+          <circle cx="138" cy="258" r="7" fill="#E8B84B"/>
+          <text x="138" y="262" fill="white" font-size="8" font-family="Inter,sans-serif" font-weight="800" text-anchor="middle">3</text>
+        </g>
+        <!-- Zandvoort -->
+        <g class="spot-marker" onclick="selectSpot('zandvoort')">
+          <circle cx="132" cy="279" r="6" fill="#E05A4A" opacity=".8"/>
+        </g>
+        <!-- Hook of Holland -->
+        <g class="spot-marker" onclick="selectSpot('hook')">
+          <circle cx="93" cy="374" r="5" fill="#E05A4A" opacity=".6"/>
+        </g>
+        <!-- Domburg -->
+        <g class="spot-marker" onclick="selectSpot('domburg')">
+          <circle cx="55" cy="465" r="6" fill="#E8B84B"/>
+          <text x="55" y="469" fill="white" font-size="8" font-family="Inter,sans-serif" font-weight="800" text-anchor="middle">2</text>
+        </g>
+      </svg>
+
+      <!-- Info card -->
+      <div style="position:absolute;top:0;left:0;right:0">
+        <div class="status" style="padding-top:14px;padding-bottom:0">
+          <span>12:30</span>
+          <div class="status-icons">
+            <svg width="26" height="13" viewBox="0 0 26 13" fill="white"><rect x=".5" y=".5" width="22" height="12" rx="3.5" stroke="white" stroke-opacity=".35" fill="none"/><rect x="2" y="2" width="17" height="9" rx="2" fill="white"/></svg>
+          </div>
+        </div>
+      </div>
+      <div class="map-info-card" id="map-info-card">
+        <div class="mic-spot" id="mic-spot-name">Scheveningen Pier</div>
+        <div class="mic-rows" id="mic-rows">
+          <div class="mic-row"><span class="mic-label">Wind</span><span class="mic-val hl">10 SE</span></div>
+          <div class="mic-row"><span class="mic-label">Swell</span><span class="mic-val">1.5m NW</span></div>
+          <div class="mic-row"><span class="mic-label">Period</span><span class="mic-val">10 s</span></div>
+        </div>
+      </div>
+
+      <!-- Crosshair -->
+      <div class="crosshair"></div>
+
+      <!-- Layer toggle -->
+      <button class="layer-btn" onclick="toggleMapStyle()" title="Toggle map style">🗺</button>
+
+      <!-- Time scrubber -->
+      <div class="time-scrubber">
+        <div class="scrub-time">6 AM</div>
+        <div class="scrub-bar">
+          <div class="scrub-pos"></div>
+        </div>
+        <div class="scrub-days">
+          <span>Mo 5</span><span>Tu 6</span><span>We 7</span><span>Th 8</span><span>Fr 9</span>
+        </div>
+      </div>
+    </div>
+  </div><!-- /map screen -->
+
+  <!-- ═══════════ GUIDE SCREEN ═══════════ -->
+  <div class="screen hidden" id="s-guide">
+    <div class="guide-screen">
+      <div class="status" style="position:absolute;top:0;left:0;right:0;z-index:10;background:linear-gradient(rgba(0,0,0,.4),transparent);padding-top:14px">
+        <span>12:30</span>
+        <div class="status-icons">
+          <svg width="26" height="13" viewBox="0 0 26 13" fill="white"><rect x=".5" y=".5" width="22" height="12" rx="3.5" stroke="white" stroke-opacity=".35" fill="none"/><rect x="2" y="2" width="13" height="9" rx="2" fill="white"/></svg>
+        </div>
+      </div>
+
+      <div class="guide-hero">
+        <!-- Beach scene painted in CSS, lighthouse suggestion -->
+        <div style="position:absolute;bottom:40px;right:60px;width:3px;height:50px;background:rgba(255,255,255,.4);border-radius:2px">
+          <div style="width:10px;height:10px;background:rgba(255,255,255,.6);border-radius:50%;position:absolute;top:-5px;left:-3.5px"></div>
+        </div>
+        <div class="guide-dots">
+          <div class="gdot"></div>
+          <div class="gdot active"></div>
+          <div class="gdot"></div>
+          <div class="gdot"></div>
+        </div>
+      </div>
+
+      <div class="guide-content">
+        <div class="guide-title-row">
+          <div class="guide-title">Scheveningen</div>
+          <button class="fav-heart" style="font-size:22px;background:none;border:none;cursor:pointer;color:var(--red)">♥</button>
+        </div>
+
+        <div class="guide-tags">
+          <div class="tag"><span class="tag-icon">🏄</span><span class="tag-label">Beach<br>Break</span></div>
+          <div class="tag"><span class="tag-icon">↔</span><span class="tag-label">Left<br>Right</span></div>
+          <div class="tag"><span class="tag-icon">⬜</span><span class="tag-label">Sand</span></div>
+          <div class="tag"><span class="tag-icon">👥</span><span class="tag-label">All<br>Levels</span></div>
+        </div>
+
+        <div class="guide-body">
+          <div class="guide-text">
+            Scheveningen is a popular surf spot with multiple peaks, a seasonal North Sea beach break that works best around the pier and the groynes.<br><br>
+            <a href="#">Show more</a>
+          </div>
+          <!-- Spot diagram SVG -->
+          <div class="spot-diagram">
+            <svg viewBox="0 0 120 110" width="116" height="106">
+              <rect width="120" height="110" fill="none"/>
+              <!-- Sand -->
+              <rect x="0" y="70" width="120" height="40" fill="rgba(200,180,140,.15)" rx="2"/>
+              <!-- Pier structure -->
+              <rect x="40" y="20" width="8" height="55" fill="rgba(255,255,255,.2)" rx="2"/>
+              <!-- Groyne 1 -->
+              <rect x="20" y="55" width="28" height="4" fill="rgba(255,255,255,.15)" rx="1" transform="rotate(-8 20 55)"/>
+              <!-- Groyne 2 -->
+              <rect x="70" y="60" width="26" height="4" fill="rgba(255,255,255,.15)" rx="1" transform="rotate(5 70 60)"/>
+              <!-- Wave arcs -->
+              <path d="M5,40 Q30,25 55,38" fill="none" stroke="rgba(77,184,255,.4)" stroke-width="1.5"/>
+              <path d="M5,50 Q30,35 55,48" fill="none" stroke="rgba(77,184,255,.3)" stroke-width="1.2"/>
+              <path d="M65,35 Q90,22 115,32" fill="none" stroke="rgba(77,184,255,.4)" stroke-width="1.5"/>
+              <path d="M65,45 Q90,32 115,42" fill="none" stroke="rgba(77,184,255,.3)" stroke-width="1.2"/>
+              <!-- Swell direction arrow -->
+              <path d="M12,12 L22,22 M18,12 L12,12 L12,18" fill="none" stroke="rgba(77,184,255,.6)" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+        </div>
+
+        <div class="guide-cards">
+          <div class="guide-card">
+            <div class="guide-card-title"><span>≋</span> Ideal conditions</div>
+            <div class="ideal-rows">
+              <div class="ideal-row"><span class="ideal-label">Wind</span><div class="ideal-sep"></div><span class="ideal-val">E–SE</span></div>
+              <div class="ideal-row"><span class="ideal-label">Swell</span><div class="ideal-sep"></div><span class="ideal-val">NW</span></div>
+              <div class="ideal-row"><span class="ideal-label">Period</span><div class="ideal-sep"></div><span class="ideal-val">10 s</span></div>
+              <div class="ideal-row"><span class="ideal-label">Tide</span><div class="ideal-sep"></div><span class="ideal-val">mid–high</span></div>
+            </div>
+          </div>
+          <div class="guide-card">
+            <div class="guide-card-title"><span>📍</span> Location</div>
+            <div class="loc-text">North Sea beach break in Scheveningen harbor on the right of the jetty.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div><!-- /guide screen -->
+
+  <!-- ═══════════ BOTTOM NAV ═══════════ -->
+  <nav class="tab-bar">
+    <button class="search-btn">
+      <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+    </button>
+    <button class="tab active" id="tab-home" onclick="goto('home')">
+      <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+      HOME
+    </button>
+    <button class="tab" id="tab-forecast" onclick="goto('forecast')">
+      <svg viewBox="0 0 24 24"><path d="M3 3h18v2H3zm0 8h18v2H3zm0 8h18v2H3zM3 7h18v2H3zm0 8h18v2H3z"/></svg>
+      FORECAST
+    </button>
+    <button class="tab" id="tab-map" onclick="goto('map')">
+      <svg viewBox="0 0 24 24"><path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg>
+      MAP
+    </button>
+    <button class="tab" id="tab-guide" onclick="goto('guide')">
+      <svg viewBox="0 0 24 24"><path d="M21 5c-1.11-.35-2.33-.5-3.5-.5-1.95 0-4.05.4-5.5 1.5-1.45-1.1-3.55-1.5-5.5-1.5S2.45 4.9 1 6v14.65c0 .25.25.5.5.5.1 0 .15-.05.25-.05C3.1 20.45 5.05 20 6.5 20c1.95 0 4.05.4 5.5 1.5 1.35-.85 3.8-1.5 5.5-1.5 1.65 0 3.35.3 4.75 1.05.1.05.15.05.25.05.25 0 .5-.25.5-.5V6c-.6-.45-1.25-.75-2-1zm0 13.5c-1.1-.35-2.3-.5-3.5-.5-1.7 0-4.15.65-5.5 1.5V8c1.35-.85 3.8-1.5 5.5-1.5 1.2 0 2.4.15 3.5.5v11.5z"/></svg>
+      GUIDE
+    </button>
+  </nav>
+</div>
+
+<script>
+const screens = { home:'s-home', forecast:'s-forecast', map:'s-map', guide:'s-guide' };
+const tabs = { home:'tab-home', forecast:'tab-forecast', map:'tab-map', guide:'tab-guide' };
+
+function goto(name) {
+  Object.keys(screens).forEach(k => {
+    document.getElementById(screens[k]).classList.toggle('hidden', k !== name);
+    document.getElementById(tabs[k]).classList.toggle('active', k === name);
+  });
+  // Special handling for map screen
+  const mapScreen = document.getElementById('s-map');
+  if(name === 'map') {
+    mapScreen.style.bottom = '';
+    mapScreen.style.overflow = 'hidden';
+  }
+}
+
+// Forecast tab switching
+function switchTab(tab) {
+  document.getElementById('tab-hourly').classList.toggle('active', tab === 'hourly');
+  document.getElementById('tab-12day').classList.toggle('active', tab === '12day');
+  document.getElementById('view-hourly').style.display = tab === 'hourly' ? '' : 'none';
+  document.getElementById('view-12day').style.display = tab === '12day' ? '' : 'none';
+}
+
+// Pill selection
+function selectPill(idx) {
+  document.querySelectorAll('.pill').forEach(p => p.classList.remove('selected-col'));
+  document.querySelectorAll('.fc-cell').forEach(c => c.classList.remove('active-col'));
+  const pill = document.querySelector(`.pill[data-col="${idx}"]`);
+  if(pill) pill.classList.add('selected-col');
+  document.querySelectorAll(`.fc-cell[data-col="${idx}"]`).forEach(c => c.classList.add('active-col'));
+}
+
+// Spot info on map
+const spotData = {
+  scheveningen: { name:'Scheveningen Pier', wind:'10 SE', swell:'1.5m NW', period:'10 s' },
+  pier:         { name:'de Pier', wind:'10 SE', swell:'1.4m NW', period:'10 s' },
+  wijk:         { name:'Wijk aan Zee', wind:'12 SW', swell:'1.2m NW', period:'9 s' },
+  zandvoort:    { name:'Zandvoort', wind:'12 SW', swell:'1.1m NW', period:'9 s' },
+  hook:         { name:'Hoek van Holland', wind:'10 SE', swell:'1.0m NW', period:'8 s' },
+  domburg:      { name:'Domburg', wind:'14 SW', swell:'1.3m W', period:'9 s' },
+};
+
+function selectSpot(id) {
+  const d = spotData[id];
+  if(!d) return;
+  document.getElementById('mic-spot-name').textContent = d.name;
+  document.getElementById('mic-rows').innerHTML = `
+    <div class="mic-row"><span class="mic-label">Wind</span><span class="mic-val hl">${d.wind}</span></div>
+    <div class="mic-row"><span class="mic-label">Swell</span><span class="mic-val">${d.swell}</span></div>
+    <div class="mic-row"><span class="mic-label">Period</span><span class="mic-val">${d.period}</span></div>
+  `;
+}
+
+// Map style toggle
+let mapDark = true;
+function toggleMapStyle() {
+  mapDark = !mapDark;
+  const land = document.getElementById('nl-land');
+  const svg = document.getElementById('map-svg');
+  if(mapDark) {
+    svg.style.background = '';
+    land.setAttribute('fill','#1c2e3a');
+    land.setAttribute('stroke','#2a4050');
+  } else {
+    // satellite-ish
+    land.setAttribute('fill','#2d4a2a');
+    land.setAttribute('stroke','#3a6030');
+    svg.style.background = 'linear-gradient(160deg,#0d2035 0%,#0a1c2e 100%)';
+  }
+}
+
+// Select 3PM pill by default
+selectPill(3);
+</script>
